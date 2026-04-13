@@ -213,9 +213,11 @@
     .back-btn:active { transform: scale(0.97); }
     .screen-header h2 { font-family: 'Syne', sans-serif; font-weight: 800; font-size: clamp(1.1rem, 4vw, 1.5rem); }
     .notes-body {
+      width: 100%;
       background: var(--surface); border: 1px solid var(--border);
       border-radius: var(--radius); padding: 1.5rem;
       line-height: 1.8; font-size: 0.9rem; color: #ccc; flex: 1;
+      overflow: scroll;
     }
     .notes-body h3 { font-family: 'Syne', sans-serif; color: var(--accent); font-size: 1rem; margin: 1.2rem 0 0.5rem; }
     .notes-body h3:first-child { margin-top: 0; }
