@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin — Paquiz ni Miche</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d0d0f; --surface: #16161a; --surface2: #1e1e24;
+      --border: #2a2a35; --accent: #f0c040; --accent2: #e87040;
+      --text: #f0ede6; --muted: #888890; --correct: #4cbb7a; --wrong: #e05555;
+      --radius: 12px;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── LOGIN ── */
+    #loginScreen {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 2rem;
+    }
+    .login-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 2.5rem 2rem;
+      max-width: 380px; width: 100%; text-align: center;
+    }
+    .login-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+    .login-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.4rem; margin-bottom: 0.4rem; }
+    .login-sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 1.5rem; }
+    .login-input {
+      width: 100%; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 0.85rem 1rem; color: var(--text);
+      font-family: 'DM Sans', sans-serif; font-size: 16px; outline: none;
+      transition: border-color 0.2s; margin-bottom: 1rem; text-align: center;
+      letter-spacing: 0.15em;
+    }
+    .login-input:focus { border-color: var(--accent); }
+    .login-btn {
+      width: 100%; background: var(--accent); color: #0d0d0f;
+      border: none; border-radius: 10px; padding: 0.9rem;
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem;
+      cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .login-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(240,192,64,0.3); }
+    .login-err { color: var(--wrong); font-size: 0.82rem; margin-top: 0.8rem; display: none; }
+
+    /* ── ADMIN SHELL ── */
+    #adminShell { display: none; }
+
+    .admin-nav {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 0.9rem 1.5rem; display: flex; align-items: center;
+      justify-content: space-between; position: sticky; top: 0; z-index: 100;
+    }
+    .admin-nav-brand { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem; }
+    .admin-nav-brand span { color: var(--accent); }
+    .admin-nav-right { display: flex; align-items: center; gap: 0.8rem; }
+    .nav-status { font-size: 0.72rem; color: var(--muted); display: flex; align-items: center; gap: 0.4rem; }
+    .nav-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--correct); }
+    .logout-btn {
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--muted); border-radius: 8px; padding: 0.4rem 0.8rem;
+      font-size: 0.8rem; cursor: pointer; transition: border-color 0.2s;
+    }
+    .logout-btn:hover { border-color: var(--wrong); color: var(--wrong); }
+
+    .admin-tabs {
+      display: flex; gap: 0; border-bottom: 1px solid var(--border);
+      background: var(--surface); padding: 0 1.5rem;
+    }
+    .admin-tab {
+      padding: 0.75rem 1.2rem; font-family: 'Syne', sans-serif; font-weight: 700;
+      font-size: 0.85rem; color: var(--muted); cursor: pointer;
+      border-bottom: 2px solid transparent; transition: color 0.2s, border-color 0.2s;
+    }
+    .admin-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    .admin-content { max-width: 860px; margin: 0 auto; padding: 1.5rem; }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── SECTION HEADER ── */
+    .section-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1.2rem; flex-wrap: wrap; gap: 0.8rem;
+    }
+    .section-head h2 { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem; }
+    .section-head p { color: var(--muted); font-size: 0.82rem; margin-top: 0.2rem; }
+
+    /* ── BUTTONS ── */
+    .btn {
+      border: none; border-radius: 8px; padding: 0.6rem 1.1rem;
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.82rem;
+      cursor: pointer; transition: transform 0.12s, box-shadow 0.12s; display: inline-flex;
+      align-items: center; gap: 0.4rem;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-accent { background: var(--accent); color: #0d0d0f; }
+    .btn-accent:hover { box-shadow: 0 4px 16px rgba(240,192,64,0.35); }
+    .btn-surface { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-surface:hover { border-color: var(--accent); }
+    .btn-danger { background: rgba(224,85,85,0.15); color: var(--wrong); border: 1px solid rgba(224,85,85,0.3); }
+    .btn-danger:hover { background: rgba(224,85,85,0.25); }
+    .btn-sm { padding: 0.4rem 0.75rem; font-size: 0.75rem; }
+    .btn-save-all {
+      background: var(--accent); color: #0d0d0f; border: none;
+      border-radius: 10px; padding: 0.85rem 2rem;
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem;
+      cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+      width: 100%; margin-top: 1rem;
+    }
+    .btn-save-all:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(240,192,64,0.3); }
+    .btn-save-all:disabled { opacity: 0.5; pointer-events: none; }
+
+    /* ── QUESTIONS TAB ── */
+    .q-list { display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 1rem; }
+
+    .q-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+    }
+    .q-card-head {
+      display: flex; align-items: center; gap: 0.8rem;
+      padding: 0.8rem 1rem; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .q-card-head:hover { background: var(--surface2); }
+    .q-num {
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.78rem;
+      color: var(--accent); min-width: 24px;
+    }
+    .q-preview { flex: 1; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .q-chevron { color: var(--muted); font-size: 0.7rem; transition: transform 0.2s; }
+    .q-card.open .q-chevron { transform: rotate(180deg); }
+    .q-card-body { display: none; padding: 0 1rem 1rem; border-top: 1px solid var(--border); }
+    .q-card.open .q-card-body { display: block; }
+
+    .field { display: flex; flex-direction: column; gap: 0.3rem; margin-top: 0.8rem; }
+    .field label { font-size: 0.75rem; color: var(--muted); font-weight: 500; letter-spacing: 0.05em; }
+    .field input, .field textarea, .field select {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.65rem 0.85rem;
+      color: var(--text); font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem; outline: none; transition: border-color 0.2s; width: 100%;
+    }
+    .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--accent); }
+    .field textarea { resize: vertical; min-height: 60px; }
+
+    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-top: 0.8rem; }
+    .option-field { display: flex; flex-direction: column; gap: 0.25rem; }
+    .option-field label { font-size: 0.72rem; color: var(--muted); }
+    .option-field input {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.6rem 0.8rem;
+      color: var(--text); font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem; outline: none; transition: border-color 0.2s; width: 100%;
+    }
+    .option-field input:focus { border-color: var(--accent); }
+    .option-field input.is-correct { border-color: var(--correct); background: rgba(76,187,122,0.07); }
+
+    .correct-row { display: flex; align-items: center; gap: 0.8rem; margin-top: 0.8rem; flex-wrap: wrap; }
+    .correct-row label { font-size: 0.75rem; color: var(--muted); }
+    .correct-row select {
+      background: var(--surface2); border: 1px solid var(--correct);
+      border-radius: 8px; padding: 0.5rem 0.8rem;
+      color: var(--correct); font-family: 'Syne', sans-serif; font-weight: 700;
+      font-size: 0.82rem; outline: none;
+    }
+
+    .q-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem; }
+
+    .add-q-card {
+      background: var(--surface); border: 1px dashed var(--border);
+      border-radius: var(--radius); padding: 1rem;
+      cursor: pointer; text-align: center; color: var(--muted);
+      font-size: 0.85rem; transition: border-color 0.2s, color 0.2s;
+    }
+    .add-q-card:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── NOTES TAB ── */
+    .notes-editor-wrap {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+    }
+    @media (max-width: 600px) { .notes-editor-wrap { grid-template-columns: 1fr; } }
+
+    .editor-col { display: flex; flex-direction: column; gap: 0.5rem; }
+    .editor-col label { font-size: 0.78rem; color: var(--muted); font-weight: 500; }
+    .notes-textarea {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1rem; color: var(--text);
+      font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
+      outline: none; resize: none; min-height: 480px; line-height: 1.6;
+      transition: border-color 0.2s; width: 100%;
+    }
+    .notes-textarea:focus { border-color: var(--accent); }
+
+    .notes-preview {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1.2rem;
+      min-height: 480px; line-height: 1.8; font-size: 0.9rem; color: #ccc;
+      overflow-y: auto;
+    }
+    .notes-preview h3 { font-family: 'Syne', sans-serif; color: var(--accent); font-size: 1rem; margin: 1.2rem 0 0.5rem; }
+    .notes-preview h3:first-child { margin-top: 0; }
+    .notes-preview p { margin-bottom: 0.6rem; }
+    .notes-preview ul { padding-left: 1.4rem; margin-bottom: 0.6rem; }
+    .notes-preview li { margin-bottom: 0.3rem; }
+
+    .notes-hint {
+      background: rgba(240,192,64,0.06); border: 1px solid rgba(240,192,64,0.2);
+      border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.78rem;
+      color: var(--muted); margin-bottom: 1rem; line-height: 1.5;
+    }
+    .notes-hint strong { color: var(--accent); }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 1.5rem; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 100px; padding: 0.6rem 1.2rem;
+      font-size: 0.85rem; z-index: 1000;
+      transition: transform 0.3s cubic-bezier(.22,1,.36,1);
+      white-space: nowrap; pointer-events: none;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ── LOADING ── */
+    .loading-state { text-align: center; padding: 3rem; color: var(--muted); font-size: 0.9rem; }
+    .saving-indicator {
+      display: none; align-items: center; gap: 0.5rem;
+      font-size: 0.8rem; color: var(--muted);
+    }
+    .saving-indicator.show { display: flex; }
+    .spinner {
+      width: 14px; height: 14px; border: 2px solid var(--border);
+      border-top-color: var(--accent); border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.2rem;
+    }
+    .stat-chip {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.6rem 1rem;
+      font-size: 0.78rem; color: var(--muted);
+    }
+    .stat-chip strong { color: var(--accent); font-family: 'Syne', sans-serif; font-size: 1rem; display: block; }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 100px; }
+        .userr{
+      color:#4cbb7a;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-icon">🔐</div>
+    <div class="login-title">Admin Panel</div>
+    <div class="login-sub">Paquiz ni Miche — enter password to continue</div>
+    <input type="password" class="login-input" id="pwInput" placeholder="••••••••" autocomplete="off"/>
+    <button class="login-btn" onclick="tryLogin()">Enter →</button>
+    <div class="login-err" id="loginErr">Wrong password. Try again!</div>
+  </div>
+  <a class="userr" href="/index.html">User</a>
+</div>
+
+<!-- ── ADMIN SHELL ── -->
+<div id="adminShell">
+  <nav class="admin-nav">
+    <div class="admin-nav-brand">⚙️ Admin — <span>Paquiz ni Miche</span></div>
+    <div class="admin-nav-right">
+      <div class="nav-status"><div class="nav-dot"></div> Firebase connected</div>
+      <div class="saving-indicator" id="savingIndicator"><div class="spinner"></div> Saving...</div>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="admin-tabs">
+    <div class="admin-tab active" onclick="switchTab('questions')">📝 Questions</div>
+    <div class="admin-tab" onclick="switchTab('notes')">📖 Notes</div>
+  </div>
+
+  <div class="admin-content">
+
+    <!-- QUESTIONS TAB -->
+    <div class="tab-panel active" id="tab-questions">
+      <div class="section-head">
+        <div>
+          <h2>Question Bank</h2>
+          <p>Click a question to expand and edit it.</p>
+        </div>
+        <button class="btn btn-accent" onclick="addQuestion()">+ Add Question</button>
+      </div>
+      <div class="stats-bar">
+        <div class="stat-chip"><strong id="totalQCount">0</strong>Total Questions</div>
+        <div class="stat-chip"><strong id="unsavedCount" style="color:var(--accent2)">0</strong>Unsaved Changes</div>
+      </div>
+      <div class="q-list" id="qList">
+        <div class="loading-state">Loading questions from Firebase... ⏳</div>
+      </div>
+      <button class="btn-save-all" id="saveAllBtn" onclick="saveAllQuestions()">💾 Save All Questions to Firebase</button>
+    </div>
+
+    <!-- NOTES TAB -->
+    <div class="tab-panel" id="tab-notes">
+      <div class="section-head">
+        <div>
+          <h2>Study Notes</h2>
+          <p>Edit the notes that students see in the Learn section.</p>
+        </div>
+        <button class="btn btn-accent" onclick="saveNotes()">💾 Save Notes</button>
+      </div>
+      <div class="notes-hint">
+        <strong>HTML supported:</strong> Use <code>&lt;h3&gt;</code> for headings, <code>&lt;p&gt;</code> for paragraphs, <code>&lt;ul&gt;&lt;li&gt;</code> for bullet points. Preview updates live on the right.
+      </div>
+      <div class="notes-editor-wrap">
+        <div class="editor-col">
+          <label>HTML Editor</label>
+          <textarea class="notes-textarea" id="notesEditor" oninput="updatePreview()" placeholder="<h3>Topic 1</h3>&#10;<p>Your notes here...</p>"></textarea>
+        </div>
+        <div class="editor-col">
+          <label>Live Preview</label>
+          <div class="notes-preview" id="notesPreview"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, getDoc, setDoc, deleteDoc,
+           collection, getDocs, writeBatch, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  /* ── CONFIG ── */
+  const ADMIN_PASSWORD = "54321"; // 🔑 CHANGE THIS to your desired password
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCk7J0Yz4dDfrcozeFGqwMaFyITz9O4vlg",
+    authDomain: "mock-quiz-b2224.firebaseapp.com",
+    projectId: "mock-quiz-b2224",
+    storageBucket: "mock-quiz-b2224.firebasestorage.app",
+    messagingSenderId: "159969488874",
+    appId: "1:159969488874:web:d562f91bfc76b3fff38c93"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  /* ── STATE ── */
+  let questions = [];   // array of { id, q, options: [A,B,C,D], correct: 0-3, dirty }
+  let unsaved   = 0;
+
+  /* ── LOGIN ── */
+  window.tryLogin = function() {
+    const pw = document.getElementById('pwInput').value;
+    if (pw === ADMIN_PASSWORD) {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('adminShell').style.display  = 'block';
+      loadAll();
+    } else {
+      document.getElementById('loginErr').style.display = 'block';
+      document.getElementById('pwInput').value = '';
+      document.getElementById('pwInput').focus();
+    }
+  };
+
+  document.getElementById('pwInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') window.tryLogin();
+  });
+
+  window.logout = function() {
+    document.getElementById('adminShell').style.display  = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('pwInput').value = '';
+  };
+
+  /* ── TABS ── */
+  window.switchTab = function(tab) {
+    document.querySelectorAll('.admin-tab').forEach((t, i) => {
+      t.classList.toggle('active', ['questions','notes'][i] === tab);
+    });
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(`tab-${tab}`).classList.add('active');
+  };
+
+  /* ── LOAD ALL ── */
+  async function loadAll() {
+    await Promise.all([loadQuestions(), loadNotes()]);
+  }
+
+  /* ══════════════════════════════════════════
+     QUESTIONS
+  ══════════════════════════════════════════ */
+  async function loadQuestions() {
+    try {
+      const snap = await getDocs(collection(db, 'questions'));
+      if (!snap.empty) {
+        questions = snap.docs
+          .map(d => ({ id: d.id, ...d.data(), dirty: false }))
+          .sort((a, b) => (a.order || 0) - (b.order || 0));
+      } else {
+        // Seed with defaults if Firestore is empty
+        questions = getDefaultQuestions().map((q, i) => ({ ...q, id: `q${i+1}`, order: i, dirty: true }));
+        showToast('No questions in Firebase yet — showing defaults. Click Save All to upload them.');
+        unsaved = questions.length;
+      }
+      renderQuestions();
+    } catch(e) {
+      showToast('Failed to load questions. Check Firebase connection.');
+    }
+  }
+
+  function getDefaultQuestions() {
+    return [
+      { q: "What is the capital of the Philippines?", options: ["Cebu City","Davao City","Manila","Quezon City"], correct: 2 },
+      { q: "Which planet is known as the Red Planet?", options: ["Venus","Mars","Jupiter","Saturn"], correct: 1 },
+      { q: "What does HTML stand for?", options: ["HyperText Markup Language","HyperTool Machine Language","HighText Markup Ledger","HyperText Making Language"], correct: 0 },
+      { q: "How many sides does a hexagon have?", options: ["5","7","8","6"], correct: 3 },
+      { q: "Who wrote 'Noli Me Tangere'?", options: ["Andres Bonifacio","Jose Rizal","Emilio Aguinaldo","Apolinario Mabini"], correct: 1 },
+      { q: "What is the chemical symbol for water?", options: ["O2","CO2","H2O","HO"], correct: 2 },
+      { q: "Which is the largest ocean on Earth?", options: ["Atlantic","Indian","Arctic","Pacific"], correct: 3 },
+      { q: "What does CSS stand for?", options: ["Creative Style Sheets","Cascading Style Sheets","Computer Style Sheets","Colorful Style Sheets"], correct: 1 },
+      { q: "In what year did World War II end?", options: ["1943","1944","1945","1946"], correct: 2 },
+      { q: "What is 7 × 8?", options: ["54","56","48","64"], correct: 1 },
+      { q: "Which gas do plants absorb during photosynthesis?", options: ["Oxygen","Nitrogen","Carbon Dioxide","Hydrogen"], correct: 2 },
+      { q: "What is the hardest natural substance on Earth?", options: ["Gold","Iron","Diamond","Titanium"], correct: 2 },
+      { q: "How many bytes are in a kilobyte?", options: ["100","500","1000","1024"], correct: 3 },
+      { q: "What language is primarily used for styling web pages?", options: ["Python","Java","CSS","SQL"], correct: 2 },
+      { q: "Who is known as the Father of Computers?", options: ["Alan Turing","Charles Babbage","Bill Gates","Steve Jobs"], correct: 1 },
+    ];
+  }
+
+  function renderQuestions() {
+    const list = document.getElementById('qList');
+    document.getElementById('totalQCount').textContent = questions.length;
+    document.getElementById('unsavedCount').textContent = unsaved;
+
+    list.innerHTML = '';
+    questions.forEach((q, idx) => {
+      const card = document.createElement('div');
+      card.className = 'q-card';
+      card.id = `qcard-${idx}`;
+      card.innerHTML = buildQCard(q, idx);
+      list.appendChild(card);
+    });
+
+    // Add new question button
+    const addBtn = document.createElement('div');
+    addBtn.className = 'add-q-card';
+    addBtn.onclick = () => window.addQuestion();
+    addBtn.innerHTML = '＋ Add New Question';
+    list.appendChild(addBtn);
+  }
+
+  function buildQCard(q, idx) {
+    const letters = ['A','B','C','D'];
+    const optFields = q.options.map((opt, oi) => `
+      <div class="option-field">
+        <label>Option ${letters[oi]}</label>
+        <input type="text" value="${escHtml(opt)}" id="opt-${idx}-${oi}"
+               class="${q.correct === oi ? 'is-correct' : ''}"
+               oninput="markDirty(${idx}); highlightCorrect(${idx})"/>
+      </div>`).join('');
+
+    return `
+      <div class="q-card-head" onclick="toggleCard(${idx})">
+        <span class="q-num">#${idx + 1}</span>
+        <span class="q-preview">${escHtml(q.q || 'New question...')}</span>
+        <span class="q-chevron">▼</span>
+      </div>
+      <div class="q-card-body">
+        <div class="field">
+          <label>Question Text</label>
+          <textarea rows="2" id="qtxt-${idx}" oninput="markDirty(${idx}); updatePreviewText(${idx})">${escHtml(q.q)}</textarea>
+        </div>
+        <div class="options-grid">${optFields}</div>
+        <div class="correct-row">
+          <label>Correct Answer:</label>
+          <select id="qcorrect-${idx}" onchange="markDirty(${idx}); highlightCorrect(${idx})">
+            ${letters.map((l, li) => `<option value="${li}" ${q.correct === li ? 'selected' : ''}>${l} — ${escHtml(q.options[li] || '')}</option>`).join('')}
+          </select>
+        </div>
+        <div class="q-actions">
+          <button class="btn btn-danger btn-sm" onclick="deleteQuestion(${idx})">🗑 Delete</button>
+          <button class="btn btn-surface btn-sm" onclick="duplicateQuestion(${idx})">⧉ Duplicate</button>
+          <button class="btn btn-accent btn-sm" onclick="saveSingleQuestion(${idx})">💾 Save</button>
+        </div>
+      </div>`;
+  }
+
+  window.toggleCard = function(idx) {
+    const card = document.getElementById(`qcard-${idx}`);
+    card.classList.toggle('open');
+  };
+
+  window.markDirty = function(idx) {
+    if (!questions[idx].dirty) { questions[idx].dirty = true; unsaved++; }
+    document.getElementById('unsavedCount').textContent = unsaved;
+  };
+
+  window.updatePreviewText = function(idx) {
+    const txt = document.getElementById(`qtxt-${idx}`).value;
+    const preview = document.querySelector(`#qcard-${idx} .q-preview`);
+    if (preview) preview.textContent = txt || 'New question...';
+  };
+
+  window.highlightCorrect = function(idx) {
+    const sel = parseInt(document.getElementById(`qcorrect-${idx}`).value);
+    for (let i = 0; i < 4; i++) {
+      const inp = document.getElementById(`opt-${idx}-${i}`);
+      if (inp) inp.classList.toggle('is-correct', i === sel);
+    }
+    // Update select options text
+    const select = document.getElementById(`qcorrect-${idx}`);
+    const letters = ['A','B','C','D'];
+    Array.from(select.options).forEach((opt, oi) => {
+      const val = document.getElementById(`opt-${idx}-${oi}`)?.value || '';
+      opt.text = `${letters[oi]} — ${val}`;
+    });
+  };
+
+  function collectQuestion(idx) {
+    return {
+      q:       document.getElementById(`qtxt-${idx}`).value.trim(),
+      options: [0,1,2,3].map(i => document.getElementById(`opt-${idx}-${i}`).value.trim()),
+      correct: parseInt(document.getElementById(`qcorrect-${idx}`).value),
+      order:   idx,
+      updatedAt: serverTimestamp()
+    };
+  }
+
+  window.saveSingleQuestion = async function(idx) {
+    const data = collectQuestion(idx);
+    if (!data.q) { showToast('Question text cannot be empty!'); return; }
+    setSaving(true);
+    try {
+      const id = questions[idx].id || `q_${Date.now()}`;
+      await setDoc(doc(db, 'questions', id), data);
+      questions[idx] = { ...questions[idx], ...data, id, dirty: false };
+      if (questions[idx].dirty) { unsaved = Math.max(0, unsaved - 1); }
+      document.getElementById('unsavedCount').textContent = unsaved;
+      showToast('✓ Question saved!');
+    } catch(e) { showToast('Error saving. Check connection.'); }
+    setSaving(false);
+  };
+
+  window.saveAllQuestions = async function() {
+    setSaving(true);
+    document.getElementById('saveAllBtn').disabled = true;
+    try {
+      const batch = writeBatch(db);
+      questions.forEach((q, idx) => {
+        const data = collectQuestion(idx);
+        const id   = q.id || `q_${Date.now()}_${idx}`;
+        questions[idx].id = id;
+        batch.set(doc(db, 'questions', id), { ...data, order: idx, updatedAt: serverTimestamp() });
+      });
+      await batch.commit();
+      questions.forEach(q => q.dirty = false);
+      unsaved = 0;
+      document.getElementById('unsavedCount').textContent = 0;
+      showToast(`✓ All ${questions.length} questions saved to Firebase!`);
+    } catch(e) { showToast('Error saving. Check connection.'); }
+    setSaving(false);
+    document.getElementById('saveAllBtn').disabled = false;
+  };
+
+  window.addQuestion = function() {
+    questions.push({
+      id: `q_new_${Date.now()}`,
+      q: '', options: ['','','',''], correct: 0, dirty: true, order: questions.length
+    });
+    unsaved++;
+    renderQuestions();
+    // Open the new card
+    setTimeout(() => {
+      const last = document.getElementById(`qcard-${questions.length - 1}`);
+      if (last) { last.classList.add('open'); last.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    }, 50);
+  };
+
+  window.deleteQuestion = async function(idx) {
+    if (!confirm(`Delete question #${idx + 1}? This cannot be undone.`)) return;
+    const id = questions[idx].id;
+    setSaving(true);
+    try {
+      if (id && !id.startsWith('q_new')) await deleteDoc(doc(db, 'questions', id));
+      questions.splice(idx, 1);
+      if (questions[idx]?.dirty) unsaved = Math.max(0, unsaved - 1);
+      renderQuestions();
+      showToast('🗑 Question deleted.');
+    } catch(e) { showToast('Error deleting.'); }
+    setSaving(false);
+  };
+
+  window.duplicateQuestion = function(idx) {
+    const orig = questions[idx];
+    const data = collectQuestion(idx);
+    questions.splice(idx + 1, 0, { ...data, id: `q_copy_${Date.now()}`, dirty: true });
+    unsaved++;
+    renderQuestions();
+    setTimeout(() => {
+      const card = document.getElementById(`qcard-${idx + 1}`);
+      if (card) { card.classList.add('open'); card.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    }, 50);
+    showToast('⧉ Question duplicated.');
+  };
+
+  /* ══════════════════════════════════════════
+     NOTES
+  ══════════════════════════════════════════ */
+  async function loadNotes() {
+    try {
+      const snap = await getDoc(doc(db, 'content', 'notes'));
+      const html = snap.exists() ? snap.data().html : '';
+      document.getElementById('notesEditor').value = html;
+      updatePreview();
+    } catch(e) { showToast('Could not load notes.'); }
+  }
+
+  window.updatePreview = function() {
+    document.getElementById('notesPreview').innerHTML =
+      document.getElementById('notesEditor').value;
+  };
+
+  window.saveNotes = async function() {
+    setSaving(true);
+    try {
+      await setDoc(doc(db, 'content', 'notes'), {
+        html: document.getElementById('notesEditor').value,
+        updatedAt: serverTimestamp()
+      });
+      showToast('✓ Notes saved to Firebase!');
+    } catch(e) { showToast('Error saving notes.'); }
+    setSaving(false);
+  };
+
+  /* ── HELPERS ── */
+  function setSaving(on) {
+    document.getElementById('savingIndicator').classList.toggle('show', on);
+  }
+
+  function escHtml(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+  }
+</script>
+</body>
+</html>
