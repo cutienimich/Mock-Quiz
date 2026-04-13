@@ -890,7 +890,7 @@
         });
       }
       setDbStatus('online');
-    } catch(e) { setDbStatus('offline'); }
+    } catch(e) { setDbStatus('offline'); console.error('Save leaderboard error:', e); }
   }
 
   /* ══════════════════════════════════════════
@@ -911,11 +911,11 @@
 
   async function fetchLeaderboard() {
     try {
-      const q    = query(collection(db, 'leaderboard'), orderBy('pct','desc'), orderBy('score','desc'), limit(20));
+      const q    = query(collection(db, 'leaderboard'), orderBy('pct','desc'), limit(20));
       const snap = await getDocs(q);
       setDbStatus('online');
       return snap.docs.map(d => d.data());
-    } catch(e) { setDbStatus('offline'); return []; }
+    } catch(e) { setDbStatus('offline'); console.error('Leaderboard error:', e); return []; }
   }
 
   /* ══════════════════════════════════════════
