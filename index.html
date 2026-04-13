@@ -501,6 +501,100 @@
       color:#4cbb7a;
       text-decoration: none;
     }
+    /* ══ LANDING LEADERBOARD ══ */
+.landing-lb {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 1.5rem;
+  max-width: 460px;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+  margin-top: 1rem;
+}
+.landing-lb-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+}
+.landing-lb-count {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 400;
+}
+.landing-lb-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.landing-lb-loading {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.82rem;
+  padding: 1rem 0;
+}
+.landing-lb-item {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.6rem 0.8rem;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.landing-lb-item:first-child { border-color: rgba(240,192,64,0.4); }
+.landing-lb-item:nth-child(2) { border-color: rgba(192,192,192,0.3); }
+.landing-lb-item:nth-child(3) { border-color: rgba(200,150,80,0.3); }
+.landing-lb-rank {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 0.9rem;
+  min-width: 22px;
+  color: var(--muted);
+}
+.landing-lb-item:first-child .landing-lb-rank { color: var(--accent); }
+.landing-lb-avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--border);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 0.75rem;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.landing-lb-item:first-child .landing-lb-avatar {
+  background: var(--accent);
+  color: #0d0d0f;
+}
+.landing-lb-name {
+  flex: 1;
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.landing-lb-score {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.landing-lb-empty {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.82rem;
+  padding: 1rem 0;
+}
   </style>
 </head>
 <body>
@@ -542,6 +636,17 @@
     </div>
   </div>
     <a class="adminn" href="/Mock-Quiz/admin.html">Admin</a>
+
+<!-- ───── LANDING LEADERBOARD ───── -->
+<div class="landing-lb">
+  <div class="landing-lb-header">
+    <span>🏆 Top Players</span>
+    <span class="landing-lb-count" id="landingLbCount">—</span>
+  </div>
+  <div class="landing-lb-list" id="landingLbList">
+    <div class="landing-lb-loading">Loading...</div>
+  </div>
+</div>
 </div>
 
 
@@ -724,6 +829,30 @@
 
 <!-- Firebase SDK -->
 <script type="module">
+  async function loadLandingLeaderboard() {
+  const list = document.getElementById('landingLbList');
+  try {
+    const q    = query(collection(db, 'leaderboard'), orderBy('pct','desc'), limit(5));
+    const snap = await getDocs(q);
+    if (snap.empty) {
+      list.innerHTML = '<div class="landing-lb-empty">No scores yet. Be the first! 🎯</div>';
+      return;
+    }
+    const entries = snap.docs.map(d => d.data());
+    document.getElementById('landingLbCount').textContent = `${entries.length} players`;
+    const medals = ['🥇','🥈','🥉'];
+    list.innerHTML = entries.map((e, i) => `
+      <div class="landing-lb-item">
+        <span class="landing-lb-rank">${medals[i] || i + 1}</span>
+        <div class="landing-lb-avatar">${e.username[0].toUpperCase()}</div>
+        <span class="landing-lb-name">${e.username}</span>
+        <span class="landing-lb-score">${e.pct}%</span>
+      </div>`).join('');
+  } catch(e) {
+    list.innerHTML = '<div class="landing-lb-empty">Could not load scores.</div>';
+    console.error('Landing leaderboard error:', e);
+  }
+}
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, doc, getDoc, setDoc, updateDoc, collection,
            query, orderBy, limit, getDocs, serverTimestamp }
@@ -927,6 +1056,7 @@
       currentUser = saved;
       showReturningBanner(saved);
     }
+     loadLandingLeaderboard();
   }
 
   async function showReturningBanner(username) {
